@@ -673,9 +673,7 @@
   </dialog>
 
   <script>
-    const API = window.location.protocol.startsWith("http") && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-      ? "/api/search"
-      : "https://wallhaven.cc/api/v1/search";
+    const API = "/api/search";
 
     const col0 = document.getElementById("col-0");
     const col1 = document.getElementById("col-1");
@@ -1012,8 +1010,13 @@
           : "Scroll for more wallpapers";
       } catch (error) {
         console.error(error);
-        footer.textContent =
-          "Request failed. Please check your connection.";
+        if (window.location.hostname.endsWith("github.io")) {
+          footer.innerHTML =
+            "GitHub Pages cannot proxy Wallhaven's API (blocked by CORS).<br>Deploy this repo to <strong>Vercel</strong> or Netlify for free serverless API proxy support.";
+        } else {
+          footer.textContent =
+            "Request failed. Please check your connection.";
+        }
       } finally {
         loading = false;
       }
