@@ -239,6 +239,14 @@
       transform: rotate(180deg);
     }
 
+    .settings-btn {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      justify-content: center;
+      font-size: 14px;
+    }
+
 
 
     .color-dot {
@@ -586,6 +594,7 @@
         <form id="searchForm">
           <input id="query" placeholder="Search portrait wallpapers..." autocomplete="off" />
           <button class="search-btn" type="submit">Search</button>
+          <button class="filter-btn settings-btn" id="settingsBtn" type="button" title="Proxy Settings (for GitHub Pages)" aria-label="Proxy Settings">⚙</button>
         </form>
       </div>
 
@@ -673,7 +682,37 @@
   </dialog>
 
   <script>
-    const API = "/api/search";
+    let customProxy = localStorage.getItem("wallhaven_proxy") || "";
+
+    function getApiEndpoint() {
+      if (customProxy) {
+        return customProxy.endsWith("/") ? customProxy.slice(0, -1) : customProxy;
+      }
+      if (window.location.protocol.startsWith("http") && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+        return "/api/search";
+      }
+      return "https://wallhaven.cc/api/v1/search";
+    }
+
+    const settingsBtn = document.getElementById("settingsBtn");
+    if (settingsBtn) {
+      settingsBtn.addEventListener("click", () => {
+        const current = localStorage.getItem("wallhaven_proxy") || "";
+        const entered = prompt(
+          "Enter your Cloudflare Worker / CORS Proxy URL (leave blank to reset):",
+          current
+        );
+        if (entered !== null) {
+          customProxy = entered.trim();
+          if (customProxy) {
+            localStorage.setItem("wallhaven_proxy", customProxy);
+          } else {
+            localStorage.removeItem("wallhaven_proxy");
+          }
+          reloadFeed();
+        }
+      });
+    }
 
     const col0 = document.getElementById("col-0");
     const col1 = document.getElementById("col-1");
@@ -975,7 +1014,8 @@
             params.set("colors", selectedColor);
           }
 
-          const response = await fetch(`${API}?${params}`);
+          const endpoint = getApiEndpoint();
+          const response = await fetch(`${endpoint}?${params}`);
           if (!response.ok) {
             throw new Error(`API request failed: ${response.status}`);
           }
@@ -1010,12 +1050,34 @@
           : "Scroll for more wallpapers";
       } catch (error) {
         console.error(error);
-        if (window.location.hostname.endsWith("github.io")) {
-          footer.innerHTML =
-            "GitHub Pages cannot proxy Wallhaven's API (blocked by CORS).<br>Deploy this repo to <strong>Vercel</strong> or Netlify for free serverless API proxy support.";
+        if (window.location.hostname.endsWith("github.io") && !customProxy) {
+          footer.innerHTML = `
+            <div style="background:#16181f; border:1px solid #282b35; border-radius:12px; padding:18px 16px; margin:20px auto; max-width:440px; text-align:left;">
+              <div style="font-weight:700; color:#fff; font-size:14px; margin-bottom:6px;">⚠️ GitHub Pages CORS Notice</div>
+              <div style="font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:12px;">
+                Wallhaven blocks browser requests from GitHub Pages due to CORS. Enter your free Cloudflare Worker proxy URL below to load wallpapers:
+              </div>
+              <div style="display:flex; gap:6px;">
+                <input id="proxyInput" placeholder="https://your-worker.workers.dev" style="flex:1; height:32px; padding:0 10px; background:#0e1014; border:1px solid #2d313d; border-radius:6px; color:#fff; font-size:12px; outline:none;" />
+                <button id="saveProxyBtn" type="button" style="height:32px; padding:0 14px; background:var(--accent); color:#090a0d; border:0; border-radius:6px; font-weight:700; font-size:12px; cursor:pointer;">Save</button>
+              </div>
+            </div>
+          `;
+          const saveBtn = document.getElementById("saveProxyBtn");
+          const input = document.getElementById("proxyInput");
+          if (saveBtn && input) {
+            saveBtn.onclick = () => {
+              const val = input.value.trim();
+              if (val) {
+                localStorage.setItem("wallhaven_proxy", val);
+                customProxy = val;
+                reloadFeed();
+              }
+            };
+          }
         } else {
           footer.textContent =
-            "Request failed. Please check your connection.";
+            "Request failed. Please check your connection or proxy.";
         }
       } finally {
         loading = false;
