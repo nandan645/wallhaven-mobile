@@ -405,7 +405,7 @@ async function loadMore() {
       : "Scroll for more wallpapers";
   } catch (error) {
     console.error(error);
-    footer.innerHTML = `Failed to load wallpapers. Please check your connection. <button type="button" class="retry-link" id="retryBtn">Try Again</button>`;
+    footer.innerHTML = `Failed to load wallpapers. Sometimes it take multiple retries. <button type="button" class="retry-link" id="retryBtn">Try Again</button>`;
     const retryBtn = document.getElementById("retryBtn");
     if (retryBtn) {
       retryBtn.addEventListener("click", () => {
