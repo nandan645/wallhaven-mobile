@@ -20,6 +20,7 @@ const footer = document.getElementById("footer");
 // Lightbox modal elements
 const lightboxModal = document.getElementById("lightboxModal");
 const closeLightbox = document.getElementById("closeLightbox");
+const lightboxLoader = document.getElementById("lightboxLoader");
 const lightboxImg = document.getElementById("lightboxImg");
 const lightboxRes = document.getElementById("lightboxRes");
 const lightboxDetails = document.getElementById("lightboxDetails");
@@ -239,9 +240,25 @@ function appendWallpaper(wallpaper) {
 // Lightbox Modal
 let currentWallpaper = null;
 
+function resetLightboxImage() {
+  lightboxImg.classList.remove("loaded");
+  lightboxImg.removeAttribute("src");
+  if (lightboxLoader) {
+    lightboxLoader.classList.remove("hidden");
+  }
+  currentWallpaper = null;
+}
+
 function openLightbox(wallpaper) {
   currentWallpaper = wallpaper;
-  lightboxImg.src = wallpaper.path || wallpaper.thumbs?.large;
+
+  // Immediately clear old image so it never shows while the new one loads
+  lightboxImg.classList.remove("loaded");
+  lightboxImg.removeAttribute("src");
+  if (lightboxLoader) {
+    lightboxLoader.classList.remove("hidden");
+  }
+
   lightboxRes.textContent = wallpaper.resolution ? `${wallpaper.resolution}` : "Portrait Wallpaper";
 
   const mb = wallpaper.file_size
@@ -252,6 +269,27 @@ function openLightbox(wallpaper) {
   lightboxWallhaven.href = wallpaper.url;
   lightboxDownload.textContent = "Download ↓";
 
+  const targetSrc = wallpaper.path || wallpaper.thumbs?.large;
+
+  // Reveal new image with smooth fade-in only once fully downloaded
+  lightboxImg.onload = () => {
+    if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
+      if (lightboxLoader) {
+        lightboxLoader.classList.add("hidden");
+      }
+      lightboxImg.classList.add("loaded");
+    }
+  };
+
+  lightboxImg.onerror = () => {
+    if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
+      if (lightboxLoader) {
+        lightboxLoader.classList.add("hidden");
+      }
+    }
+  };
+
+  lightboxImg.src = targetSrc;
   lightboxModal.showModal();
 }
 
@@ -302,6 +340,8 @@ lightboxModal.addEventListener("click", e => {
     lightboxModal.close();
   }
 });
+
+lightboxModal.addEventListener("close", resetLightboxImage);
 
 // Fetch Wallpapers
 async function loadMore() {
