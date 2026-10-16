@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://nandan645.github.io/wallhaven-mobile/</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://nandan645.github.io/wallhaven-mobile/screenshots/01-gallery.png</image:loc>
+      <image:title>Wallhaven Mobile Portrait Wallpaper Gallery</image:title>
+      <image:caption>Mobile-first portrait wallpaper gallery for phone screens</image:caption>
+    </image:image>
+  </url>
+</urlset>

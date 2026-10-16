@@ -1,0 +1,19 @@
+{
+  "name": "Wallhaven Mobile — Portrait Wallpapers",
+  "short_name": "Wallhaven",
+  "description": "Browse and download high-resolution portrait phone wallpapers directly from Wallhaven.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090a0d",
+  "theme_color": "#090a0d",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "48x48 32x32 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["utilities", "personalization", "photos"]
+}

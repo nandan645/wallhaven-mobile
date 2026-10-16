@@ -3,15 +3,115 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Wallhaven Mobile — Portrait Wallpapers</title>
+
+  <!-- Primary Meta Tags -->
+  <title>Wallhaven Mobile — 4K & HD Portrait Wallpapers for Phones</title>
+  <meta name="title" content="Wallhaven Mobile — 4K & HD Portrait Wallpapers for Phones">
+  <meta name="description" content="Browse, search, and download thousands of high-resolution 4K and AMOLED portrait phone wallpapers directly from Wallhaven. Features natural aspect ratios and zero cropping.">
+  <meta name="keywords" content="wallhaven mobile, portrait wallpapers, phone wallpapers, 4k mobile wallpapers, anime phone wallpapers, amoled wallpapers, mobile background hd, portrait phone background, wallhaven cc">
+  <meta name="author" content="Wallhaven Mobile">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="https://nandan645.github.io/wallhaven-mobile/">
+
+  <!-- Mobile & Web App Capabilities -->
+  <meta name="theme-color" content="#090a0d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Wallhaven Mobile">
+  <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nandan645.github.io/wallhaven-mobile/">
+  <meta property="og:title" content="Wallhaven Mobile — 4K & HD Portrait Wallpapers">
+  <meta property="og:description" content="Fast, clean 2-column gallery for browsing and downloading high-resolution portrait phone wallpapers with natural aspect ratios.">
+  <meta property="og:image" content="https://nandan645.github.io/wallhaven-mobile/screenshots/01-gallery.png">
+  <meta property="og:image:width" content="1080">
+  <meta property="og:image:height" content="2400">
+  <meta property="og:image:alt" content="Wallhaven Mobile 2-column portrait wallpaper gallery">
+  <meta property="og:site_name" content="Wallhaven Mobile">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://nandan645.github.io/wallhaven-mobile/">
+  <meta name="twitter:title" content="Wallhaven Mobile — 4K & HD Portrait Wallpapers">
+  <meta name="twitter:description" content="Fast, clean 2-column gallery for browsing and downloading high-resolution portrait phone wallpapers with natural aspect ratios.">
+  <meta name="twitter:image" content="https://nandan645.github.io/wallhaven-mobile/screenshots/01-gallery.png">
+  <meta name="twitter:image:alt" content="Wallhaven Mobile portrait wallpaper gallery interface">
+
+  <!-- Generative Engine Optimization (GEO) & Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://nandan645.github.io/wallhaven-mobile/#app",
+        "name": "Wallhaven Mobile",
+        "url": "https://nandan645.github.io/wallhaven-mobile/",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "All (Web, Android, iOS)",
+        "description": "Mobile-first web application designed for exploring and downloading high-resolution portrait phone wallpapers with natural uncropped aspect ratios, instant category/color filters, and 1-click downloads.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "screenshot": "https://nandan645.github.io/wallhaven-mobile/screenshots/01-gallery.png",
+        "browserRequirements": "Requires JavaScript and modern browser support"
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://nandan645.github.io/wallhaven-mobile/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is Wallhaven Mobile?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Wallhaven Mobile is a fast, clean, mobile-first web app tailored for browsing and downloading high-resolution portrait wallpapers for smartphone screens directly from Wallhaven."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does Wallhaven Mobile maintain natural image aspect ratios?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Wallhaven Mobile uses uncropped original thumbnail dimensions and an intelligent shortest-column masonry algorithm, preventing awkward stretching or letterboxing."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I filter wallpapers by color or category?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Use the top filter bar to toggle General, Anime, or People categories, select from a 28-color palette, sort by Date Added, Toplist, Views, or Favorites, and switch ascending or descending order."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Wallhaven Mobile free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, Wallhaven Mobile is 100% free and open-source, powered by the public Wallhaven.cc API."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
     <div class="nav-container">
       <div class="top-row">
-        <div class="brand">Wallhaven <span>Mobile</span></div>
+        <h1 class="brand">Wallhaven <span>Mobile</span></h1>
         <form id="searchForm">
           <input id="query" placeholder="Search portrait wallpapers..." autocomplete="off" />
           <button class="search-btn" type="submit">Search</button>
@@ -71,6 +171,14 @@
   </header>
 
   <main>
+    <h2 class="sr-only">High-Resolution Portrait Wallpapers for Mobile Screens</h2>
+
+    <noscript>
+      <div class="noscript-banner">
+        <p><strong>Wallhaven Mobile</strong> provides high-resolution 4K and HD portrait wallpapers for mobile phones. Please enable JavaScript in your browser to load and interact with the dynamic wallpaper gallery.</p>
+      </div>
+    </noscript>
+
     <!-- Strictly 2 Columns -->
     <div class="gallery" id="gallery">
       <div class="column" id="col-0"></div>

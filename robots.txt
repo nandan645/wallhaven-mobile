@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Explicit AI search & generative crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+Sitemap: https://nandan645.github.io/wallhaven-mobile/sitemap.xml
