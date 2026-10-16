@@ -357,7 +357,7 @@ async function loadMore() {
     while (attempts < 4 && addedThisBatch < 16 && !ended) {
       const params = new URLSearchParams({
         q: query,
-        purity: "100",
+        purity: "110",
         categories: getCategoriesString(),
         sorting: selectedSort,
         order: selectedOrder,
