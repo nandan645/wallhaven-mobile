@@ -614,6 +614,30 @@ main {
   font-size: 12px;
 }
 
+.retry-link {
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 4px;
+  margin-left: 4px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.15s ease;
+  display: inline-block;
+}
+
+.retry-link:hover {
+  opacity: 0.85;
+}
+
+.retry-link:active {
+  opacity: 0.65;
+}
+
 /* Tablet and desktop enhancements */
 @media (min-width: 600px) {
   header {

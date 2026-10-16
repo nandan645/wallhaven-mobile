@@ -405,7 +405,14 @@ async function loadMore() {
       : "Scroll for more wallpapers";
   } catch (error) {
     console.error(error);
-    footer.textContent = "Failed to load wallpapers. Please check your connection.";
+    footer.innerHTML = `Failed to load wallpapers. Please check your connection. <button type="button" class="retry-link" id="retryBtn">Try Again</button>`;
+    const retryBtn = document.getElementById("retryBtn");
+    if (retryBtn) {
+      retryBtn.addEventListener("click", () => {
+        footer.textContent = "Fetching wallpapers...";
+        loadMore();
+      });
+    }
   } finally {
     loading = false;
   }
