@@ -682,6 +682,7 @@
   </dialog>
 
   <script>
+    const DEFAULT_PROXY = "https://wallhaven.nandanabhi455.workers.dev";
     let customProxy = localStorage.getItem("wallhaven_proxy") || "";
 
     function getApiEndpoint() {
@@ -691,23 +692,24 @@
       if (window.location.protocol.startsWith("http") && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
         return "/api/search";
       }
-      return "https://wallhaven.cc/api/v1/search";
+      return DEFAULT_PROXY;
     }
 
     const settingsBtn = document.getElementById("settingsBtn");
     if (settingsBtn) {
       settingsBtn.addEventListener("click", () => {
-        const current = localStorage.getItem("wallhaven_proxy") || "";
+        const current = localStorage.getItem("wallhaven_proxy") || DEFAULT_PROXY;
         const entered = prompt(
-          "Enter your Cloudflare Worker / CORS Proxy URL (leave blank to reset):",
+          "Enter your Cloudflare Worker / CORS Proxy URL (leave blank to restore default):",
           current
         );
         if (entered !== null) {
           customProxy = entered.trim();
-          if (customProxy) {
+          if (customProxy && customProxy !== DEFAULT_PROXY) {
             localStorage.setItem("wallhaven_proxy", customProxy);
           } else {
             localStorage.removeItem("wallhaven_proxy");
+            customProxy = "";
           }
           reloadFeed();
         }
