@@ -133,21 +133,7 @@ function startRateLimitCooldown(seconds = 35) {
   let remaining = seconds;
   if (cooldownInterval) clearInterval(cooldownInterval);
 
-  const renderCooldownText = () => {
-    footer.innerHTML = `Wallhaven rate limit reached (45 req/min). Retrying automatically in <strong id="cooldownSeconds" style="color:var(--accent)">${remaining}s</strong>... <button type="button" class="retry-link" id="forceRetryBtn">Try Now</button>`;
-    const forceBtn = document.getElementById("forceRetryBtn");
-    if (forceBtn) forceBtn.addEventListener("click", forceRetry);
-  };
-
-  const forceRetry = () => {
-    if (cooldownInterval) clearInterval(cooldownInterval);
-    cooldownInterval = null;
-    isRateLimited = false;
-    footer.textContent = "Fetching wallpapers...";
-    loadMore();
-  };
-
-  renderCooldownText();
+  footer.innerHTML = `Wallhaven rate limit reached (45 req/min). Retrying automatically in <strong id="cooldownSeconds" style="color:var(--accent)">${remaining}s</strong>...`;
 
   cooldownInterval = setInterval(() => {
     remaining--;
@@ -155,11 +141,15 @@ function startRateLimitCooldown(seconds = 35) {
     if (el) {
       el.textContent = `${remaining}s`;
     } else {
-      renderCooldownText();
+      footer.innerHTML = `Wallhaven rate limit reached (45 req/min). Retrying automatically in <strong id="cooldownSeconds" style="color:var(--accent)">${remaining}s</strong>...`;
     }
 
     if (remaining <= 0) {
-      forceRetry();
+      clearInterval(cooldownInterval);
+      cooldownInterval = null;
+      isRateLimited = false;
+      footer.textContent = "Fetching wallpapers...";
+      loadMore();
     }
   }, 1000);
 }
