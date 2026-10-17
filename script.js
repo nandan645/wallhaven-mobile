@@ -80,15 +80,117 @@ function getCategoriesString() {
   return `${g}${a}${p}`;
 }
 
-function reloadFeed() {
-  page = 1;
-  loading = false;
-  ended = false;
-  seen.clear();
-  columnHeights = [0, 0];
-  col0.replaceChildren();
-  col1.replaceChildren();
-  loadMore();
+// Client-side Cache (Memory + SessionStorage, 5 min TTL)
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const memoryCache = new Map();
+
+function getCachedData(cacheKey) {
+  const now = Date.now();
+  if (memoryCache.has(cacheKey)) {
+    const entry = memoryCache.get(cacheKey);
+    if (now - entry.timestamp < CACHE_TTL_MS) {
+      return entry.data;
+    }
+    memoryCache.delete(cacheKey);
+  }
+  try {
+    const raw = sessionStorage.getItem(`wh_${cacheKey}`);
+    if (raw) {
+      const entry = JSON.parse(raw);
+      if (now - entry.timestamp < CACHE_TTL_MS) {
+        memoryCache.set(cacheKey, entry);
+        return entry.data;
+      }
+      sessionStorage.removeItem(`wh_${cacheKey}`);
+    }
+  } catch (e) {
+    // sessionStorage might be restricted or full
+  }
+  return null;
+}
+
+function setCachedData(cacheKey, data) {
+  const entry = { timestamp: Date.now(), data };
+  memoryCache.set(cacheKey, entry);
+  try {
+    sessionStorage.setItem(`wh_${cacheKey}`, JSON.stringify(entry));
+  } catch (e) {
+    // sessionStorage fallback ignored
+  }
+}
+
+// Request cancellation & Debounce
+let activeAbortController = null;
+let reloadDebounceTimer = null;
+
+// Rate limit cooldown state
+let cooldownInterval = null;
+let isRateLimited = false;
+
+function startRateLimitCooldown(seconds = 35) {
+  isRateLimited = true;
+  let remaining = seconds;
+  if (cooldownInterval) clearInterval(cooldownInterval);
+
+  const renderCooldownText = () => {
+    footer.innerHTML = `Wallhaven rate limit reached (45 req/min). Retrying automatically in <strong id="cooldownSeconds" style="color:var(--accent)">${remaining}s</strong>... <button type="button" class="retry-link" id="forceRetryBtn">Try Now</button>`;
+    const forceBtn = document.getElementById("forceRetryBtn");
+    if (forceBtn) forceBtn.addEventListener("click", forceRetry);
+  };
+
+  const forceRetry = () => {
+    if (cooldownInterval) clearInterval(cooldownInterval);
+    cooldownInterval = null;
+    isRateLimited = false;
+    footer.textContent = "Fetching wallpapers...";
+    loadMore();
+  };
+
+  renderCooldownText();
+
+  cooldownInterval = setInterval(() => {
+    remaining--;
+    const el = document.getElementById("cooldownSeconds");
+    if (el) {
+      el.textContent = `${remaining}s`;
+    } else {
+      renderCooldownText();
+    }
+
+    if (remaining <= 0) {
+      forceRetry();
+    }
+  }, 1000);
+}
+
+function reloadFeed(immediate = false) {
+  if (reloadDebounceTimer) {
+    clearTimeout(reloadDebounceTimer);
+    reloadDebounceTimer = null;
+  }
+
+  const executeReload = () => {
+    // Cancel in-flight network request
+    if (activeAbortController) {
+      activeAbortController.abort();
+      activeAbortController = null;
+    }
+
+    page = 1;
+    loading = false;
+    ended = false;
+    seen.clear();
+    columnHeights = [0, 0];
+    col0.replaceChildren();
+    col1.replaceChildren();
+    loadMore();
+  };
+
+  if (immediate) {
+    executeReload();
+  } else {
+    reloadDebounceTimer = setTimeout(executeReload, 250);
+  }
 }
 
 // Category Buttons
@@ -383,65 +485,90 @@ lightboxModal.addEventListener("close", resetLightboxImage);
 
 // Fetch Wallpapers
 async function loadMore() {
-  if (loading || ended) return;
+  if (loading || ended || isRateLimited) return;
 
   loading = true;
   footer.textContent = "Fetching wallpapers...";
 
+  activeAbortController = new AbortController();
+  const signal = activeAbortController.signal;
+
   try {
-    let attempts = 0;
-    let addedThisBatch = 0;
+    const params = new URLSearchParams({
+      q: query,
+      purity: selectedPurity,
+      categories: getCategoriesString(),
+      sorting: selectedSort,
+      order: selectedOrder,
+      ratios: "portrait",
+      page: String(page)
+    });
 
-    while (attempts < 4 && addedThisBatch < 16 && !ended) {
-      const params = new URLSearchParams({
-        q: query,
-        purity: selectedPurity,
-        categories: getCategoriesString(),
-        sorting: selectedSort,
-        order: selectedOrder,
-        ratios: "portrait",
-        page: String(page)
-      });
+    if (selectedColor) {
+      params.set("colors", selectedColor);
+    }
 
-      if (selectedColor) {
-        params.set("colors", selectedColor);
+    const cacheKey = params.toString();
+    let json = getCachedData(cacheKey);
+
+    if (!json) {
+      const endpoint = getApiEndpoint();
+      const response = await fetch(`${endpoint}?${params}`, { signal });
+
+      if (response.status === 429) {
+        let retryAfter = parseInt(response.headers.get("Retry-After"), 10);
+        if (isNaN(retryAfter) || retryAfter <= 0) {
+          retryAfter = 35;
+        }
+        startRateLimitCooldown(retryAfter);
+        return;
       }
 
-      const endpoint = getApiEndpoint();
-      const response = await fetch(`${endpoint}?${params}`);
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
 
-      const json = await response.json();
-      const items = json.data || [];
+      json = await response.json();
+      setCachedData(cacheKey, json);
+    }
 
-      for (const wallpaper of items) {
-        if (seen.has(wallpaper.id)) continue;
+    const items = json.data || [];
+    let addedCount = 0;
 
-        // Only portrait images (height strictly greater than width)
-        if (+wallpaper.dimension_y <= +wallpaper.dimension_x) {
-          continue;
-        }
+    for (const wallpaper of items) {
+      if (seen.has(wallpaper.id)) continue;
 
-        seen.add(wallpaper.id);
-        appendWallpaper(wallpaper);
-        addedThisBatch++;
+      // Only portrait images (height strictly greater than width)
+      if (+wallpaper.dimension_y <= +wallpaper.dimension_x) {
+        continue;
       }
 
-      const lastPage = +(json.meta?.last_page || page);
-      page++;
-      attempts++;
+      seen.add(wallpaper.id);
+      appendWallpaper(wallpaper);
+      addedCount++;
+    }
 
-      if (!items.length || page > lastPage) {
-        ended = true;
-      }
+    const lastPage = +(json.meta?.last_page || page);
+    page++;
+
+    if (!items.length || page > lastPage) {
+      ended = true;
     }
 
     footer.textContent = ended
       ? "You've reached the end."
       : "Scroll for more wallpapers";
+
+    // If an edge-case page returned 0 matching portrait items, auto-advance to next page
+    if (addedCount === 0 && !ended && items.length > 0) {
+      loading = false;
+      return loadMore();
+    }
   } catch (error) {
+    if (error.name === "AbortError") {
+      // Intentionally cancelled by user action
+      return;
+    }
     console.error(error);
     footer.innerHTML = `Failed to load wallpapers. Sometimes it take multiple retries. <button type="button" class="retry-link" id="retryBtn">Try Again</button>`;
     const retryBtn = document.getElementById("retryBtn");
@@ -456,20 +583,20 @@ async function loadMore() {
   }
 }
 
-// Infinite scroll observer
+// Infinite scroll observer (smooth 300px trigger)
 const observer = new IntersectionObserver(entries => {
   if (entries.some(entry => entry.isIntersecting)) {
     loadMore();
   }
-}, { rootMargin: "800px" });
+}, { rootMargin: "300px" });
 
 observer.observe(document.getElementById("sentinel"));
 
-// Search handler
+// Search handler (immediate reload)
 document.getElementById("searchForm").addEventListener("submit", e => {
   e.preventDefault();
   query = document.getElementById("query").value.trim();
-  reloadFeed();
+  reloadFeed(true);
 });
 
 // Initial load
