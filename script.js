@@ -400,9 +400,10 @@ function openLightbox(wallpaper) {
   lightboxWallhaven.href = wallpaper.url;
   lightboxDownload.textContent = "Download ↓";
 
-  const targetSrc = wallpaper.path || wallpaper.thumbs?.large;
+  // Always use optimized high-res thumbnail for crisp, instant mobile preview
+  const targetSrc = wallpaper.thumbs?.original || wallpaper.thumbs?.large || wallpaper.path;
 
-  // Reveal new image with smooth fade-in only once fully downloaded
+  // Reveal image with smooth fade-in once ready
   lightboxImg.onload = () => {
     if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
       if (lightboxLoader) {
@@ -421,6 +422,15 @@ function openLightbox(wallpaper) {
   };
 
   lightboxImg.src = targetSrc;
+
+  // If already loaded/cached by browser from feed thumbnail, reveal immediately
+  if (lightboxImg.complete && lightboxImg.naturalWidth > 0) {
+    if (lightboxLoader) {
+      lightboxLoader.classList.add("hidden");
+    }
+    lightboxImg.classList.add("loaded");
+  }
+
   lightboxModal.showModal();
 }
 
