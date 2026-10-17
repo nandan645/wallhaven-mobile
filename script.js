@@ -348,6 +348,7 @@ function createWallpaperCard(wallpaper) {
   const img = document.createElement("img");
   img.loading = "lazy";
   img.decoding = "async";
+  img.referrerPolicy = "no-referrer";
   img.alt = `Wallpaper ${wallpaper.resolution || ""}`;
   img.src = thumbUrl;
 
@@ -404,6 +405,7 @@ function loadLightboxFullImage(wallpaper) {
   // Show ONLY loading animation initially (no low-res preview)
   lightboxImg.classList.remove("loaded");
   lightboxImg.removeAttribute("src");
+  lightboxImg.referrerPolicy = "no-referrer";
   if (lightboxError) lightboxError.classList.add("hidden");
   if (lightboxLoader) lightboxLoader.classList.remove("hidden");
 
@@ -433,13 +435,20 @@ function loadLightboxFullImage(wallpaper) {
 
   lightboxImg.onerror = () => {
     if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
+      const fallbackSrc = wallpaper.thumbs?.original || wallpaper.thumbs?.large;
+      // If full image failed, attempt fallback thumbnail before showing error
+      if (fallbackSrc && lightboxImg.src !== fallbackSrc) {
+        lightboxImg.src = fallbackSrc;
+        return;
+      }
+
       if (lightboxTimeoutId) {
         clearTimeout(lightboxTimeoutId);
         lightboxTimeoutId = null;
       }
       lightboxImg.removeAttribute("src");
       if (lightboxLoader) lightboxLoader.classList.add("hidden");
-      if (lightboxErrorMsg) lightboxErrorMsg.textContent = "Failed to load image.";
+      if (lightboxErrorMsg) lightboxErrorMsg.textContent = "Failed to load wallpaper.";
       if (lightboxError) lightboxError.classList.remove("hidden");
     }
   };
@@ -482,7 +491,7 @@ lightboxDownload.addEventListener("click", async () => {
   lightboxDownload.textContent = "Downloading...";
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { referrerPolicy: "no-referrer" });
     if (!response.ok) throw new Error("Fetch failed");
     const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);
