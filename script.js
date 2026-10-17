@@ -383,13 +383,6 @@ function resetLightboxImage() {
 function openLightbox(wallpaper) {
   currentWallpaper = wallpaper;
 
-  // Immediately clear old image so it never shows while the new one loads
-  lightboxImg.classList.remove("loaded");
-  lightboxImg.removeAttribute("src");
-  if (lightboxLoader) {
-    lightboxLoader.classList.remove("hidden");
-  }
-
   lightboxRes.textContent = wallpaper.resolution ? `${wallpaper.resolution}` : "Portrait Wallpaper";
 
   const mb = wallpaper.file_size
@@ -400,35 +393,50 @@ function openLightbox(wallpaper) {
   lightboxWallhaven.href = wallpaper.url;
   lightboxDownload.textContent = "Download ↓";
 
-  // Always use optimized high-res thumbnail for crisp, instant mobile preview
-  const targetSrc = wallpaper.thumbs?.original || wallpaper.thumbs?.large || wallpaper.path;
+  const fullSrc = wallpaper.path;
+  const previewSrc = wallpaper.thumbs?.original || wallpaper.thumbs?.large;
 
-  // Reveal image with smooth fade-in once ready
-  lightboxImg.onload = () => {
-    if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
-      if (lightboxLoader) {
-        lightboxLoader.classList.add("hidden");
-      }
-      lightboxImg.classList.add("loaded");
+  // 1. Show cached preview immediately so the modal is never blank or waiting
+  if (previewSrc) {
+    lightboxImg.src = previewSrc;
+    lightboxImg.classList.add("loaded");
+  } else {
+    lightboxImg.classList.remove("loaded");
+  }
+
+  // 2. Progressively upgrade to full uncompromised high-resolution image
+  if (fullSrc && fullSrc !== previewSrc) {
+    if (lightboxLoader) {
+      lightboxLoader.classList.remove("hidden");
     }
-  };
 
-  lightboxImg.onerror = () => {
-    if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
-      if (lightboxLoader) {
-        lightboxLoader.classList.add("hidden");
+    const fullImg = new Image();
+    fullImg.decoding = "async";
+
+    fullImg.onload = () => {
+      if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
+        lightboxImg.src = fullSrc;
+        lightboxImg.classList.add("loaded");
+        if (lightboxLoader) {
+          lightboxLoader.classList.add("hidden");
+        }
       }
-    }
-  };
+    };
 
-  lightboxImg.src = targetSrc;
+    fullImg.onerror = () => {
+      // If raw full file fails or times out, the preview image remains visible
+      if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
+        if (lightboxLoader) {
+          lightboxLoader.classList.add("hidden");
+        }
+      }
+    };
 
-  // If already loaded/cached by browser from feed thumbnail, reveal immediately
-  if (lightboxImg.complete && lightboxImg.naturalWidth > 0) {
+    fullImg.src = fullSrc;
+  } else {
     if (lightboxLoader) {
       lightboxLoader.classList.add("hidden");
     }
-    lightboxImg.classList.add("loaded");
   }
 
   lightboxModal.showModal();
