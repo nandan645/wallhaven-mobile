@@ -35,6 +35,11 @@ const clearColorBtn = document.getElementById("clearColorBtn");
 const activeColorDot = document.getElementById("activeColorDot");
 const colorDropdownWrapper = document.getElementById("colorDropdownWrapper");
 
+const purityBtn = document.getElementById("purityBtn");
+const purityBtnLabel = document.getElementById("purityBtnLabel");
+const purityMenu = document.getElementById("purityMenu");
+const purityDropdownWrapper = document.getElementById("purityDropdownWrapper");
+
 const sortBtn = document.getElementById("sortBtn");
 const sortBtnLabel = document.getElementById("sortBtnLabel");
 const sortMenu = document.getElementById("sortMenu");
@@ -57,6 +62,7 @@ let categoriesState = {
   people: false
 };
 let selectedColor = null;
+let selectedPurity = "100"; // Default: SFW ("100"). Sketchy: "110" (SFW + Sketchy)
 let selectedSort = "date_added";
 let selectedOrder = "desc";
 
@@ -126,6 +132,18 @@ clearColorBtn.addEventListener("click", () => {
   reloadFeed();
 });
 
+// Purity Options (SFW / Sketchy)
+document.querySelectorAll(".purity-item").forEach(item => {
+  item.addEventListener("click", () => {
+    selectedPurity = item.dataset.purity;
+    purityBtnLabel.textContent = item.dataset.label || item.textContent;
+    document.querySelectorAll(".purity-item").forEach(p => p.classList.remove("active"));
+    item.classList.add("active");
+    closeAllDropdowns();
+    reloadFeed();
+  });
+});
+
 // Sort Options
 document.querySelectorAll(".sort-item").forEach(item => {
   item.addEventListener("click", () => {
@@ -154,6 +172,10 @@ if (orderBtn) {
 function closeAllDropdowns() {
   colorMenu.classList.remove("open");
   colorBtn.classList.remove("open");
+  if (purityMenu && purityBtn) {
+    purityMenu.classList.remove("open");
+    purityBtn.classList.remove("open");
+  }
   sortMenu.classList.remove("open");
   sortBtn.classList.remove("open");
 }
@@ -168,6 +190,18 @@ colorBtn.addEventListener("click", (e) => {
   }
 });
 
+if (purityBtn) {
+  purityBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = purityMenu.classList.contains("open");
+    closeAllDropdowns();
+    if (!isOpen) {
+      purityMenu.classList.add("open");
+      purityBtn.classList.add("open");
+    }
+  });
+}
+
 sortBtn.addEventListener("click", (e) => {
   e.stopPropagation();
   const isOpen = sortMenu.classList.contains("open");
@@ -179,7 +213,11 @@ sortBtn.addEventListener("click", (e) => {
 });
 
 document.addEventListener("click", (e) => {
-  if (!colorDropdownWrapper.contains(e.target) && !sortDropdownWrapper.contains(e.target)) {
+  if (
+    !colorDropdownWrapper.contains(e.target) &&
+    !(purityDropdownWrapper && purityDropdownWrapper.contains(e.target)) &&
+    !sortDropdownWrapper.contains(e.target)
+  ) {
     closeAllDropdowns();
   }
 });
@@ -357,7 +395,7 @@ async function loadMore() {
     while (attempts < 4 && addedThisBatch < 16 && !ended) {
       const params = new URLSearchParams({
         q: query,
-        purity: "110",
+        purity: selectedPurity,
         categories: getCategoriesString(),
         sorting: selectedSort,
         order: selectedOrder,

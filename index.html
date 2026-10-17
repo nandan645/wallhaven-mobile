@@ -90,7 +90,7 @@
             "name": "How do I filter wallpapers by color or category?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Use the top filter bar to toggle General, Anime, or People categories, select from a 28-color palette, sort by Date Added, Toplist, Views, or Favorites, and switch ascending or descending order."
+              "text": "Use the top filter bar to toggle General, Anime, or People categories, select from a 28-color palette, choose SFW or Sketchy purity rating, sort by Date Added, Toplist, Views, or Favorites, and switch ascending or descending order."
             }
           },
           {
@@ -143,6 +143,18 @@
                 <button type="button" class="clear-color-link" id="clearColorBtn">Clear</button>
               </div>
               <div class="color-grid" id="colorGrid"></div>
+            </div>
+          </div>
+
+          <!-- Purity Dropdown (SFW, Sketchy) -->
+          <div class="dropdown-wrapper" id="purityDropdownWrapper">
+            <button type="button" class="filter-btn" id="purityBtn" aria-expanded="false" aria-haspopup="true">
+              <span id="purityBtnLabel">SFW</span>
+              <span class="arrow">▾</span>
+            </button>
+            <div class="dropdown-menu purity-menu" id="purityMenu">
+              <button type="button" class="purity-item active" data-purity="100" data-label="SFW">SFW</button>
+              <button type="button" class="purity-item" data-purity="110" data-label="Sketchy">Sketchy (SFW+Sketchy)</button>
             </div>
           </div>
 
