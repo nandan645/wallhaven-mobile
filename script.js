@@ -16,6 +16,7 @@ function getApiEndpoint() {
 const col0 = document.getElementById("col-0");
 const col1 = document.getElementById("col-1");
 const footer = document.getElementById("footer");
+const brandLink = document.getElementById("brandLink");
 
 // Lightbox modal elements
 const lightboxModal = document.getElementById("lightboxModal");
@@ -598,6 +599,66 @@ document.getElementById("searchForm").addEventListener("submit", e => {
   query = document.getElementById("query").value.trim();
   reloadFeed(true);
 });
+
+// Reset site to default home state
+function resetToDefaultHome() {
+  // 1. Reset search input and query
+  const queryInput = document.getElementById("query");
+  if (queryInput) queryInput.value = "";
+  query = "";
+
+  // 2. Reset categories (General: ON, Anime: ON, People: OFF)
+  categoriesState.general = true;
+  categoriesState.anime = true;
+  categoriesState.people = false;
+  document.querySelectorAll(".cat-btn").forEach(btn => {
+    const cat = btn.dataset.cat;
+    btn.classList.toggle("active", Boolean(categoriesState[cat]));
+  });
+
+  // 3. Reset color filter
+  selectedColor = null;
+  if (activeColorDot) activeColorDot.style.display = "none";
+  document.querySelectorAll(".color-chip").forEach(c => c.classList.remove("selected"));
+
+  // 4. Reset purity (SFW: 100)
+  selectedPurity = "100";
+  if (purityBtnLabel) purityBtnLabel.textContent = "SFW";
+  document.querySelectorAll(".purity-item").forEach(p => {
+    p.classList.toggle("active", p.dataset.purity === "100");
+  });
+
+  // 5. Reset sorting (Date Added: date_added)
+  selectedSort = "date_added";
+  if (sortBtnLabel) sortBtnLabel.textContent = "Date Added";
+  document.querySelectorAll(".sort-item").forEach(s => {
+    s.classList.toggle("active", s.dataset.sort === "date_added");
+  });
+
+  // 6. Reset sort order (desc: ↓)
+  selectedOrder = "desc";
+  if (orderIcon) orderIcon.textContent = "↓";
+  if (orderBtn) orderBtn.title = "Sort Order: Descending";
+
+  // 7. Close any open dropdown menus
+  closeAllDropdowns();
+
+  // 8. Smooth scroll back to top
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // 9. Reload feed immediately
+  reloadFeed(true);
+}
+
+if (brandLink) {
+  brandLink.addEventListener("click", (e) => {
+    // Intercept standard left-clicks without modifier keys
+    if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+      e.preventDefault();
+      resetToDefaultHome();
+    }
+  });
+}
 
 // Initial load
 loadMore();

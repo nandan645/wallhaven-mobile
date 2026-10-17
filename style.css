@@ -56,11 +56,29 @@ header {
 }
 
 .brand {
+  margin: 0;
   font-size: clamp(16px, 4vw, 20px);
   font-weight: 800;
   letter-spacing: -0.5px;
   user-select: none;
   white-space: nowrap;
+}
+
+.brand a {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-block;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.brand a:hover {
+  opacity: 0.88;
+}
+
+.brand a:active {
+  transform: scale(0.97);
+  opacity: 0.75;
 }
 
 .brand span {
