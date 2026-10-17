@@ -27,6 +27,11 @@ const lightboxRes = document.getElementById("lightboxRes");
 const lightboxDetails = document.getElementById("lightboxDetails");
 const lightboxDownload = document.getElementById("lightboxDownload");
 const lightboxWallhaven = document.getElementById("lightboxWallhaven");
+const lightboxError = document.getElementById("lightboxError");
+const lightboxErrorMsg = document.getElementById("lightboxErrorMsg");
+const lightboxRetryBtn = document.getElementById("lightboxRetryBtn");
+let lightboxTimeoutId = null;
+const LIGHTBOX_TIMEOUT_MS = 15000; // 15-second timeout for image load
 
 // Filter controls
 const colorBtn = document.getElementById("colorBtn");
@@ -372,12 +377,74 @@ function appendWallpaper(wallpaper) {
 let currentWallpaper = null;
 
 function resetLightboxImage() {
+  if (lightboxTimeoutId) {
+    clearTimeout(lightboxTimeoutId);
+    lightboxTimeoutId = null;
+  }
   lightboxImg.classList.remove("loaded");
   lightboxImg.removeAttribute("src");
   if (lightboxLoader) {
     lightboxLoader.classList.remove("hidden");
   }
+  if (lightboxError) {
+    lightboxError.classList.add("hidden");
+  }
   currentWallpaper = null;
+}
+
+function loadLightboxFullImage(wallpaper) {
+  if (!currentWallpaper || currentWallpaper.id !== wallpaper.id) return;
+
+  // Clear any existing timer
+  if (lightboxTimeoutId) {
+    clearTimeout(lightboxTimeoutId);
+    lightboxTimeoutId = null;
+  }
+
+  // Show ONLY loading animation initially (no low-res preview)
+  lightboxImg.classList.remove("loaded");
+  lightboxImg.removeAttribute("src");
+  if (lightboxError) lightboxError.classList.add("hidden");
+  if (lightboxLoader) lightboxLoader.classList.remove("hidden");
+
+  const targetSrc = wallpaper.path || wallpaper.thumbs?.large;
+
+  // 15-second timeout safeguard
+  lightboxTimeoutId = setTimeout(() => {
+    if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
+      lightboxImg.removeAttribute("src");
+      if (lightboxLoader) lightboxLoader.classList.add("hidden");
+      if (lightboxErrorMsg) lightboxErrorMsg.textContent = "Loading timed out.";
+      if (lightboxError) lightboxError.classList.remove("hidden");
+    }
+  }, LIGHTBOX_TIMEOUT_MS);
+
+  lightboxImg.onload = () => {
+    if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
+      if (lightboxTimeoutId) {
+        clearTimeout(lightboxTimeoutId);
+        lightboxTimeoutId = null;
+      }
+      if (lightboxLoader) lightboxLoader.classList.add("hidden");
+      if (lightboxError) lightboxError.classList.add("hidden");
+      lightboxImg.classList.add("loaded");
+    }
+  };
+
+  lightboxImg.onerror = () => {
+    if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
+      if (lightboxTimeoutId) {
+        clearTimeout(lightboxTimeoutId);
+        lightboxTimeoutId = null;
+      }
+      lightboxImg.removeAttribute("src");
+      if (lightboxLoader) lightboxLoader.classList.add("hidden");
+      if (lightboxErrorMsg) lightboxErrorMsg.textContent = "Failed to load image.";
+      if (lightboxError) lightboxError.classList.remove("hidden");
+    }
+  };
+
+  lightboxImg.src = targetSrc;
 }
 
 function openLightbox(wallpaper) {
@@ -393,53 +460,16 @@ function openLightbox(wallpaper) {
   lightboxWallhaven.href = wallpaper.url;
   lightboxDownload.textContent = "Download ↓";
 
-  const fullSrc = wallpaper.path;
-  const previewSrc = wallpaper.thumbs?.original || wallpaper.thumbs?.large;
-
-  // 1. Show cached preview immediately so the modal is never blank or waiting
-  if (previewSrc) {
-    lightboxImg.src = previewSrc;
-    lightboxImg.classList.add("loaded");
-  } else {
-    lightboxImg.classList.remove("loaded");
-  }
-
-  // 2. Progressively upgrade to full uncompromised high-resolution image
-  if (fullSrc && fullSrc !== previewSrc) {
-    if (lightboxLoader) {
-      lightboxLoader.classList.remove("hidden");
-    }
-
-    const fullImg = new Image();
-    fullImg.decoding = "async";
-
-    fullImg.onload = () => {
-      if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
-        lightboxImg.src = fullSrc;
-        lightboxImg.classList.add("loaded");
-        if (lightboxLoader) {
-          lightboxLoader.classList.add("hidden");
-        }
-      }
-    };
-
-    fullImg.onerror = () => {
-      // If raw full file fails or times out, the preview image remains visible
-      if (currentWallpaper && currentWallpaper.id === wallpaper.id) {
-        if (lightboxLoader) {
-          lightboxLoader.classList.add("hidden");
-        }
-      }
-    };
-
-    fullImg.src = fullSrc;
-  } else {
-    if (lightboxLoader) {
-      lightboxLoader.classList.add("hidden");
-    }
-  }
-
+  loadLightboxFullImage(wallpaper);
   lightboxModal.showModal();
+}
+
+if (lightboxRetryBtn) {
+  lightboxRetryBtn.addEventListener("click", () => {
+    if (currentWallpaper) {
+      loadLightboxFullImage(currentWallpaper);
+    }
+  });
 }
 
 lightboxDownload.addEventListener("click", async () => {

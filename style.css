@@ -547,6 +547,40 @@ main {
   visibility: hidden;
 }
 
+.lightbox-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  z-index: 6;
+  background: rgba(18, 20, 26, 0.9);
+  padding: 16px 22px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.lightbox-error.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.lightbox-error .error-msg {
+  font-size: 13px;
+  color: #fca5a5;
+  font-weight: 600;
+}
+
 .spinner {
   width: 32px;
   height: 32px;
