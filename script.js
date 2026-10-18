@@ -86,43 +86,13 @@ function getCategoriesString() {
   return `${g}${a}${p}`;
 }
 
-// Client-side Cache (Memory + SessionStorage, 5 min TTL)
-const CACHE_TTL_MS = 5 * 60 * 1000;
-const memoryCache = new Map();
-
-function getCachedData(cacheKey) {
-  const now = Date.now();
-  if (memoryCache.has(cacheKey)) {
-    const entry = memoryCache.get(cacheKey);
-    if (now - entry.timestamp < CACHE_TTL_MS) {
-      return entry.data;
-    }
-    memoryCache.delete(cacheKey);
-  }
-  try {
-    const raw = sessionStorage.getItem(`wh_${cacheKey}`);
-    if (raw) {
-      const entry = JSON.parse(raw);
-      if (now - entry.timestamp < CACHE_TTL_MS) {
-        memoryCache.set(cacheKey, entry);
-        return entry.data;
-      }
-      sessionStorage.removeItem(`wh_${cacheKey}`);
-    }
-  } catch (e) {
-    // sessionStorage might be restricted or full
-  }
-  return null;
-}
-
-function setCachedData(cacheKey, data) {
-  const entry = { timestamp: Date.now(), data };
-  memoryCache.set(cacheKey, entry);
-  try {
-    sessionStorage.setItem(`wh_${cacheKey}`, JSON.stringify(entry));
-  } catch (e) {
-    // sessionStorage fallback ignored
-  }
+// Purge any legacy cached session data
+try {
+  Object.keys(sessionStorage).forEach(key => {
+    if (key.startsWith("wh_")) sessionStorage.removeItem(key);
+  });
+} catch (e) {
+  // Ignore if sessionStorage is unavailable
 }
 
 // Request cancellation & Debounce
@@ -556,29 +526,23 @@ async function loadMore() {
       params.set("colors", selectedColor);
     }
 
-    const cacheKey = params.toString();
-    let json = getCachedData(cacheKey);
+    const endpoint = getApiEndpoint();
+    const response = await fetch(`${endpoint}?${params}`, { signal });
 
-    if (!json) {
-      const endpoint = getApiEndpoint();
-      const response = await fetch(`${endpoint}?${params}`, { signal });
-
-      if (response.status === 429) {
-        let retryAfter = parseInt(response.headers.get("Retry-After"), 10);
-        if (isNaN(retryAfter) || retryAfter <= 0) {
-          retryAfter = 35;
-        }
-        startRateLimitCooldown(retryAfter);
-        return;
+    if (response.status === 429) {
+      let retryAfter = parseInt(response.headers.get("Retry-After"), 10);
+      if (isNaN(retryAfter) || retryAfter <= 0) {
+        retryAfter = 35;
       }
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-
-      json = await response.json();
-      setCachedData(cacheKey, json);
+      startRateLimitCooldown(retryAfter);
+      return;
     }
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const json = await response.json();
 
     const items = json.data || [];
     let addedCount = 0;
