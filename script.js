@@ -1,6 +1,13 @@
 // Cloudflare Worker CORS proxy for Wallhaven API
 const DEFAULT_PROXY = "https://wallhaven.nandanabhi455.workers.dev";
-let customProxy = localStorage.getItem("wallhaven_proxy") || "";
+let customProxy = "";
+
+try {
+  // Purge any legacy stale proxy configuration to ensure production worker is used
+  localStorage.removeItem("wallhaven_proxy");
+} catch (e) {
+  // Ignore if localStorage is restricted
+}
 
 function getApiEndpoint() {
   if (customProxy) {
@@ -527,7 +534,10 @@ async function loadMore() {
     }
 
     const endpoint = getApiEndpoint();
-    const response = await fetch(`${endpoint}?${params}`, { signal });
+    const response = await fetch(`${endpoint}?${params}`, {
+      signal,
+      cache: "no-store"
+    });
 
     if (response.status === 429) {
       let retryAfter = parseInt(response.headers.get("Retry-After"), 10);
